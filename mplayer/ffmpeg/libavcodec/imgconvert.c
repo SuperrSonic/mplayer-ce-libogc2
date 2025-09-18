@@ -715,7 +715,7 @@ void av_picture_data_copy(uint8_t *dst_data[4], int dst_linesize[4],
                           uint8_t *src_data[4], int src_linesize[4],
                           enum PixelFormat pix_fmt, int width, int height)
 {
-    av_image_copy(dst_data, dst_linesize, src_data, src_linesize,
+    av_image_copy(dst_data, dst_linesize, (const uint8_t **)src_data, src_linesize,
                   pix_fmt, width, height);
 }
 #endif
@@ -723,7 +723,7 @@ void av_picture_data_copy(uint8_t *dst_data[4], int dst_linesize[4],
 void av_picture_copy(AVPicture *dst, const AVPicture *src,
                      enum PixelFormat pix_fmt, int width, int height)
 {
-    av_image_copy(dst->data, dst->linesize, src->data,
+    av_image_copy(dst->data, dst->linesize, (const uint8_t **)src->data,
                   src->linesize, pix_fmt, width, height);
 }
 

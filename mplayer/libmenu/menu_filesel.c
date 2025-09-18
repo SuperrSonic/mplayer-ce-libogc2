@@ -53,6 +53,9 @@
 #include "input/input.h"
 #include "osdep/keycodes.h"
 
+extern void fast_continue();
+extern void fast_pause();
+extern void update_osd_msg(void);
 
 #include "fsysloc.h"
 
@@ -120,6 +123,12 @@ static char menu_dir[MAXPATHLEN];
 /*Function prototypes and libraries needed to compile*/
 /*****************************************************/
 int dir_play=1;
+int dir_shuffle=0;
+int dir_loop=0;
+static int shuffleCNT = 0; // total files to work with
+static u16 numarray[512];
+static bool shuffleOnce = true;
+static u16 cnt_shuff = 0;
 //int levenshtein_distance(char *s,char*t);
 int minimum(int a,int b,int c);
 
@@ -369,6 +378,28 @@ strcpy(menu_dir,mpriv->dir);
 		goto error_exit;
 	}
   }
+  else if(!strcmp(mpriv->dir,"gcsd:/"))
+  {
+	if(FindDevice("gcsd:") < 0)
+	{
+		rm_osd_msg(OSD_MSG_TEXT);
+	  	set_osd_msg(OSD_MSG_TEXT, 1, 2000, "GC SD Card not mounted.");
+	  	update_osd_msg();
+		mp_input_queue_cmd(mp_input_parse_cmd("menu show"));
+		goto error_exit;
+	}
+  }
+  else if(!strcmp(mpriv->dir,"sp2:/"))
+  {
+	if(FindDevice("sp2:") < 0)
+	{
+		rm_osd_msg(OSD_MSG_TEXT);
+	  	set_osd_msg(OSD_MSG_TEXT, 1, 2000, "SP2 SD Card not mounted.");
+	  	update_osd_msg();
+		mp_input_queue_cmd(mp_input_parse_cmd("menu show"));
+		goto error_exit;
+	}
+  }
 #ifdef HW_RVL
   else if(!strcmp(mpriv->dir,"dvd:/"))
   {  
@@ -426,28 +457,6 @@ strcpy(menu_dir,mpriv->dir);
 	}
   }
 #endif
-  else if(mpriv->dir[0]=='s' && mpriv->dir[1]=='m' && mpriv->dir[2]=='b' && mpriv->dir[4]==':')
-  { // reconnect samba if needed
-	  char device[5]="smbx";
-	  
-	  if(network_initied==0)
-	  {
-  		  set_osd_msg(OSD_MSG_TEXT,1,2000,"Network not yet initialized, Please Wait");
-  		  update_osd_msg();
-  		  mp_input_queue_cmd(mp_input_parse_cmd("menu show"));
-		  goto error_exit;
-	  }
-	  	  
-	  device[3]=mpriv->dir[3];
-	  if(!smbConnect(device))
-	  {
-		  set_osd_msg(OSD_MSG_TEXT,1,2000,"Error connecting to %s ",device);
-		  update_osd_msg();
-		  mp_input_queue_cmd(mp_input_parse_cmd("menu show"));
-		  goto error_exit;	  
-	  }	  
-	  
-  }
 #ifdef HW_RVL
   else if(mpriv->dir[0]=='f' && mpriv->dir[1]=='t' && mpriv->dir[2]=='p' && mpriv->dir[4]==':')
   { // reconnect ftp if needed
@@ -592,6 +601,11 @@ bailout:
     goto error_exit;
   }
   if(n>1)qsort(namelist, n, sizeof(char *), (kill_warn)compare);
+  
+  // SUSO: For shuffling
+  shuffleCNT = n - 2;
+  cnt_shuff = 0;
+
   while(n--) {
     if((e = calloc(1,sizeof(list_entry_t))) != NULL){
     e->p.next = NULL;
@@ -807,16 +821,149 @@ static int open_fs(menu_t* menu, char* args) {
   return r;
 }
 
+//Shuffle array, stackoverflow.com
+void ShuffleDir()
+{
+	//if(shuffleCNT == 1)
+		//return;
+	int low = 1;
+	int	high = shuffleCNT;
+	//if(shuffleCNT == 1)
+		//high = 2;
+
+    int arraylength = high - low + 1;
+
+    /* Create array from low and high numbers provided. */
+    int i;
+    int j = low;
+    for (i = 0; i < arraylength; i++)
+    {
+       numarray[i] = j + i;
+     //  printf("%d\t", numarray[i]);
+    }
+
+    /* Shuffle array. */
+    int temp;
+    int randindex;
+    for (i = 0; i < arraylength; i++)
+    {
+        temp = numarray[i];
+       // randindex = rand_r(&get_inf) % arraylength;
+        randindex = rand() % arraylength;
+        if (numarray[i] == numarray[randindex])
+        {
+            i = i - 1;
+        }
+        else
+        {
+            numarray[i] = numarray[randindex];
+            numarray[randindex] = temp;
+        }
+    }
+}
 
 bool check_play_next_file(char *fileplaying,char *next_filename)
 {
-	if(next_file==NULL || dir_play==false || file_dir==NULL) return false;
+	if((next_file==NULL && !dir_loop) || dir_play==false || file_dir==NULL) return false;
 	
 	if(menu_dir==NULL || menu_dir[0]=='\0') return false;
 	if(strcmp(file_dir,menu_dir)!=0) return false;
 	
-	if(strlen(file_dir)+strlen(next_file)>MAXPATHLEN) return false;
-
+	if(next_file!=NULL)
+		if(strlen(file_dir)+strlen(next_file)>MAXPATHLEN) return false;
+	
+	if(dir_loop && !dir_shuffle && next_file==NULL) {
+#if 1 // this way is not accurate, because readdir can be randomly ordered
+		DIR *dir;
+		struct dirent *entry;
+		dir = opendir(file_dir);
+		if (dir==NULL)
+			return false;
+		u32 index = shuffleCNT;
+		while ((entry = readdir(dir)))
+		{
+			size_t length = strlen(entry->d_name);
+			int i = 0;
+			while(entry->d_name[i] != 0)
+			{
+				if(entry->d_name[i] == 0x2F) { // assume dir
+					length = 0;
+					break;
+				}
+				++i;
+			}
+			if(length < 4)
+			   continue;
+			if (cnt_shuff==index--)
+				break;
+		}
+		++cnt_shuff;
+		if(cnt_shuff > shuffleCNT)
+			cnt_shuff = 0;
+		sprintf(next_filename,"%s%s",file_dir, entry->d_name);
+		closedir(dir);
+		return true;
+#endif
+	}
+	
+#if 1
+	if(dir_shuffle) {
+		if(shuffleOnce) {
+			ShuffleDir();
+			shuffleOnce = false;
+		}
+		
+		DIR *dir;
+		struct dirent *entry;
+		dir = opendir(file_dir);
+		if (dir==NULL)
+			return false;
+		u32 index = 0;
+		//rewinddir(dir);
+		
+		while ((entry = readdir(dir)))
+		{
+			size_t length = strlen(entry->d_name);
+			//if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+			int i = 0;
+			while(entry->d_name[i] != 0)
+			{
+				if(entry->d_name[i] == 0x2F) { // assume dir
+					length = 0;
+					break;
+				}
+				++i;
+			}
+			if(length < 4)
+			   continue;
+			
+			//if (length > 4 && numarray[cnt_shuff]==index++)
+			if (numarray[cnt_shuff]==index++)
+				break;
+		}
+		++cnt_shuff;
+		
+		if(cnt_shuff > (shuffleCNT+1)) {
+			cnt_shuff = 0;
+		//	ShuffleDir();
+			shuffleOnce = true;
+			
+			if(dir_loop) {
+				sprintf(next_filename,"%s%s",file_dir, entry->d_name);
+				closedir(dir);
+				return true;
+			} else {
+				closedir(dir);
+				return false;
+			}
+		}
+		
+		sprintf(next_filename,"%s%s",file_dir, entry->d_name);
+		closedir(dir);
+		return true;
+	}
+#endif
+	
 	sprintf(next_filename,"%s%s",file_dir,next_file);
 	next_file=NULL;
 	if(current_list!=NULL)

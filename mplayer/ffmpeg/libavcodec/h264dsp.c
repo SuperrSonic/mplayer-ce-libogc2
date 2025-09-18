@@ -272,6 +272,11 @@ static void h264_h_loop_filter_chroma_intra_c(uint8_t *pix, int stride, int alph
     h264_loop_filter_chroma_intra_c(pix, 1, stride, alpha, beta);
 }
 
+void ff_h264dsp_init_ppc(H264DSPContext *c)
+{
+    return;
+}
+
 void ff_h264dsp_init(H264DSPContext *c)
 {
     c->h264_idct_add= ff_h264_idct_add_c;

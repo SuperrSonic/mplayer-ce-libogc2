@@ -21,7 +21,9 @@
 #ifndef AVUTIL_PPC_PAIRED_H
 #define AVUTIL_PPC_PAIRED_H
 
-#include <paired.h>
+//#include <paired.h>
+
+#define vector register
 
 typedef float vec_f32_t __attribute__((vector_size(8)));
 typedef unsigned char vec_u8_t __attribute__((vector_size(2)));
@@ -171,5 +173,47 @@ enum {
 	vector float frD; \
 	asm("ps_sum1 %0,%1,%2,%3" : "=f"(frD) : "f"(frA), "f"(frC), "f"(frB)); \
 	frD; })
+
+#define ps_cmpu0(crfD, frA, frB) ({ \
+	vector float frD; \
+	asm volatile("ps_cmpu0 %0,%1,%2" : "=f"(frD) : "f"(frA), "f"(frB)); \
+	frD; })
+
+#define ps_cmpu1(crfD, frA, frB) ({ \
+	vector float frD; \
+	asm volatile("ps_cmpu1 %0,%1,%2" : "=f"(frD) : "f"(frA), "f"(frB)); \
+	frD; })
+
+#if 1
+#define paired_msub ps_msub
+#define paired_madd ps_madd
+#define paired_nmsub ps_nmsub
+#define paired_nmadd ps_nmadd
+#define paired_sum0 ps_sum0
+#define paired_sum1 ps_sum1
+#define paired_add ps_add
+#define paired_sub ps_sub
+#define paired_mul ps_mul
+#define paired_muls0 ps_muls0
+#define paired_muls1 ps_muls1
+#define paired_madds0 ps_madds0
+#define paired_madds1 ps_madds1
+#define paired_merge00 ps_merge00
+#define paired_merge01 ps_merge01
+#define paired_merge10 ps_merge10
+#define paired_merge11 ps_merge11
+#define paired_neg ps_neg
+#define paired_stx(frD,rB,rA) psq_stx(frD,rA,rB,0,0)
+#define paired_lx(rB,rA) psq_lx(rA,rB,0,0)
+
+#define paired_sel ps_sel
+#define paired_cmpu0 ps_cmpu0
+#define paired_cmpu1 ps_cmpu1
+
+#define LT            0
+#define GT            1
+#define EQ            2
+#define UN            3
+#endif
 
 #endif /* AVUTIL_PPC_PAIRED_H */

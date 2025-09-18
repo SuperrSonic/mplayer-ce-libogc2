@@ -37,6 +37,8 @@
 #include "osdep/ave-rvl.h"
 #include "osdep/mem2.h"
 
+#include <malloc.h>
+
 #define BURST_SIZE 5760
 #define NUM_BUFFERS 18
 

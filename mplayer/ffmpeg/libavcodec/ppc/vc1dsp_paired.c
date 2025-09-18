@@ -59,7 +59,7 @@ static void vc1_inv_trans_8x8_dc_paired(uint8_t *dest, int linesize, DCTELEM *bl
 static void vc1_inv_trans_8x4_dc_paired(uint8_t *dest, int linesize, DCTELEM *block)
 {
 	const float half = 0.5;
-	const vec_f32_t scale = {1.5,0.1328125};
+	const vector float scale = {1.5,0.1328125};
 	vector float pair, offset;
 	
 	offset = psq_l(0,block,1,7);
@@ -91,7 +91,7 @@ static void vc1_inv_trans_8x4_dc_paired(uint8_t *dest, int linesize, DCTELEM *bl
 static void vc1_inv_trans_4x8_dc_paired(uint8_t *dest, int linesize, DCTELEM *block)
 {
 	const float half = 0.5;
-	const vec_f32_t scale = {2.125,0.09375};
+	const vector float scale = {2.125,0.09375};
 	vector float pair, offset;
 	
 	offset = psq_l(0,block,1,7);
@@ -115,7 +115,7 @@ static void vc1_inv_trans_4x8_dc_paired(uint8_t *dest, int linesize, DCTELEM *bl
 static void vc1_inv_trans_4x4_dc_paired(uint8_t *dest, int linesize, DCTELEM *block)
 {
 	const float half = 0.5;
-	const vec_f32_t scale = {2.125,0.1328125};
+	const vector float scale = {2.125,0.1328125};
 	vector float pair, offset;
 	
 	offset = psq_l(0,block,1,7);
@@ -143,6 +143,6 @@ void ff_vc1dsp_init_paired(VC1DSPContext *dsp)
 	dsp->vc1_inv_trans_4x8_dc = vc1_inv_trans_4x8_dc_paired;
 	dsp->vc1_inv_trans_4x4_dc = vc1_inv_trans_4x4_dc_paired;
 	
-	dsp->put_no_rnd_vc1_chroma_pixels_tab[0] = ff_put_vc1_chroma_mc8_paired_nornd;
-	dsp->avg_no_rnd_vc1_chroma_pixels_tab[0] = ff_avg_vc1_chroma_mc8_paired_nornd;
+	//dsp->put_no_rnd_vc1_chroma_pixels_tab[0] = ff_put_vc1_chroma_mc8_paired_nornd;
+	//dsp->avg_no_rnd_vc1_chroma_pixels_tab[0] = ff_avg_vc1_chroma_mc8_paired_nornd;
 }

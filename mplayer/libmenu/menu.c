@@ -460,7 +460,7 @@ static char *menu_fribidi(char *txt)
     }
     len = fribidi_charset_to_unicode (char_set_num, txt, len, logical);
     base = menu_fribidi_flip_commas?FRIBIDI_TYPE_ON:FRIBIDI_TYPE_L;
-    log2vis = fribidi_log2vis (logical, len, &base, visual, NULL, NULL, NULL);
+    log2vis = fribidi_log2vis (logical, len, (FriBidiParType *)&base, visual, NULL, NULL, NULL);
     if (log2vis) {
       len = fribidi_remove_bidi_marks (visual, len, NULL, NULL, NULL);
       fribidi_unicode_to_charset (char_set_num, visual, len, outputstr);

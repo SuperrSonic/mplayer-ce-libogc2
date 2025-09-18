@@ -525,7 +525,9 @@ static int mpeg_decode_mb(MpegEncContext *s,
                 }
             }
 
-            if (s->codec_id == CODEC_ID_MPEG2VIDEO) {
+            // NOTE: mpeg2_fast_decode_block_non_intra causes artifacts
+			if (s->codec_id == CODEC_ID_MPEG2VIDEO) {
+			#if 0
                 if(s->flags2 & CODEC_FLAG2_FAST){
                     for(i=0;i<6;i++) {
                         if(cbp & 32) {
@@ -535,7 +537,9 @@ static int mpeg_decode_mb(MpegEncContext *s,
                         }
                         cbp+=cbp;
                     }
-                }else{
+                } else
+			#endif
+				{
                     cbp<<= 12-mb_block_count;
 
                     for(i=0;i<mb_block_count;i++) {
@@ -1037,9 +1041,15 @@ static inline int mpeg2_decode_block_intra(MpegEncContext *s,
                 LAST_SKIP_BITS(re, &s->gb, 1);
             } else {
                 /* escape */
-                run = SHOW_UBITS(re, &s->gb, 6)+1; LAST_SKIP_BITS(re, &s->gb, 6);
-                UPDATE_CACHE(re, &s->gb);
-                level = SHOW_SBITS(re, &s->gb, 12); SKIP_BITS(re, &s->gb, 12);
+                run = SHOW_UBITS(re, &s->gb, 6)+1;
+				
+				SKIP_BITS(re, &s->gb, 6);
+			//	LAST_SKIP_BITS(re, &s->gb, 6);
+              //  UPDATE_CACHE(re, &s->gb);
+                level = SHOW_SBITS(re, &s->gb, 12);
+			//	SKIP_BITS(re, &s->gb, 12);
+				LAST_SKIP_BITS(re, &s->gb, 12);
+				
                 i += run;
                 j = scantable[i];
                 if(level<0){
@@ -1113,9 +1123,14 @@ static inline int mpeg2_fast_decode_block_intra(MpegEncContext *s,
                 LAST_SKIP_BITS(re, &s->gb, 1);
             } else {
                 /* escape */
-                run = SHOW_UBITS(re, &s->gb, 6)+1; LAST_SKIP_BITS(re, &s->gb, 6);
-                UPDATE_CACHE(re, &s->gb);
-                level = SHOW_SBITS(re, &s->gb, 12); SKIP_BITS(re, &s->gb, 12);
+                run = SHOW_UBITS(re, &s->gb, 6)+1;
+				SKIP_BITS(re, &s->gb, 6);
+			//	LAST_SKIP_BITS(re, &s->gb, 6);
+             //   UPDATE_CACHE(re, &s->gb);
+                level = SHOW_SBITS(re, &s->gb, 12);
+			//	SKIP_BITS(re, &s->gb, 12);
+				LAST_SKIP_BITS(re, &s->gb, 12);
+				
                 scantable += run;
                 j = *scantable;
                 if(level<0){
@@ -1668,6 +1683,8 @@ static int mpeg_decode_slice(Mpeg1Context *s1, int mb_y,
     if(mb_y==0 && s->codec_tag == AV_RL32("SLIF")){
         skip_bits1(&s->gb);
     }else{
+		// speedcheck
+	//	while (get_bits_left(&s->gb) > 0) {
         for(;;) {
             int code = get_vlc2(&s->gb, mbincr_vlc.table, MBINCR_VLC_BITS, 2);
             if (code < 0){
@@ -1911,7 +1928,7 @@ static int slice_end(AVCodecContext *avctx, AVFrame *pict)
         ff_xvmc_field_end(s);
 
     /* end of slice reached */
-    if (/*s->mb_y<<field_pic == s->mb_height &&*/ !s->first_field) {
+    if (/*s->mb_y<<field_pic == s->mb_height &&*/ !s->first_field && !s->first_slice) {
         /* end of image */
 
         s->current_picture_ptr->qscale_type= FF_QSCALE_TYPE_MPEG2;

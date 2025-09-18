@@ -748,38 +748,6 @@ uint64_t ff_get_v(AVIOContext *bc){
 
 int url_fdopen(AVIOContext **s, URLContext *h)
 {
-    uint8_t *buffer;
-    int buffer_size, max_packet_size;
-
-    max_packet_size = url_get_max_packet_size(h);
-    if (max_packet_size) {
-        buffer_size = max_packet_size; /* no need to bufferize more than one packet */
-    } else {
-        buffer_size = IO_BUFFER_SIZE;
-    }
-    buffer = av_malloc(buffer_size);
-    if (!buffer)
-        return AVERROR(ENOMEM);
-
-    *s = av_mallocz(sizeof(AVIOContext));
-    if(!*s) {
-        av_free(buffer);
-        return AVERROR(ENOMEM);
-    }
-
-    if (ffio_init_context(*s, buffer, buffer_size,
-                      (h->flags & URL_WRONLY || h->flags & URL_RDWR), h,
-                      url_read, url_write, url_seek) < 0) {
-        av_free(buffer);
-        av_freep(s);
-        return AVERROR(EIO);
-    }
-    (*s)->is_streamed = h->is_streamed;
-    (*s)->max_packet_size = max_packet_size;
-    if(h->prot) {
-        (*s)->read_pause = (int (*)(void *, int))h->prot->url_read_pause;
-        (*s)->read_seek  = (int64_t (*)(void *, int, int64_t, int))h->prot->url_read_seek;
-    }
     return 0;
 }
 

@@ -1435,9 +1435,15 @@ static int matroska_read_header(AVFormatContext *s, AVFormatParameters *ap)
         if (track->flag_forced)
             st->disposition |= AV_DISPOSITION_FORCED;
 
-        if (track->default_duration)
-            av_reduce(&st->codec->time_base.num, &st->codec->time_base.den,
-                      track->default_duration, 1000000000, 30000);
+#if 1
+    //    if (track->default_duration)
+    //        av_reduce(&st->codec->time_base.num, &st->codec->time_base.den,
+     //                 track->default_duration, 1000000000, 30000);
+#else
+        if (track->default_duration)   // Breaks decoding on certain framerates, only when framedrop is enabled
+            av_reduce(&st->avg_frame_rate.num, &st->avg_frame_rate.den,
+                      1000000000, track->default_duration, 30000);
+#endif
 
         if (!st->codec->extradata) {
             if(extradata){
@@ -1460,15 +1466,18 @@ static int matroska_read_header(AVFormatContext *s, AVFormatParameters *ap)
             st->codec->codec_tag  = track->video.fourcc;
             st->codec->width  = track->video.pixel_width;
             st->codec->height = track->video.pixel_height;
+			
             av_reduce(&st->sample_aspect_ratio.num,
                       &st->sample_aspect_ratio.den,
                       st->codec->height * track->video.display_width,
                       st->codec-> width * track->video.display_height,
                       255);
-            if (st->codec->codec_id != CODEC_ID_H264)
+         //   if (st->codec->codec_id != CODEC_ID_H264)
             st->need_parsing = AVSTREAM_PARSE_HEADERS;
             if (track->default_duration)
-                st->avg_frame_rate = av_d2q(1000000000.0/track->default_duration, INT_MAX);
+                //st->avg_frame_rate = av_d2q(1000000000.0/track->default_duration, INT_MAX);
+				av_reduce(&st->avg_frame_rate.num, &st->avg_frame_rate.den,
+                          1000000000, track->default_duration, 30000);
         } else if (track->type == MATROSKA_TRACK_TYPE_AUDIO) {
             st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
             st->codec->sample_rate = track->audio.out_samplerate;

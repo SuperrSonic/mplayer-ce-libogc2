@@ -106,19 +106,26 @@ void mpviSetup(int video_mode, bool overscan)
 	
 	switch(video_mode) {
 		case 1:		// NTSC (480i)
-			vmode = &TVNtsc480IntDf;
+			vmode = &TVNtsc480Int;
 			break;
 		case 2:		// Progressive (480p)
 			vmode = &TVNtsc480Prog;
 			break;
 		case 3:		// PAL (50Hz)
-			vmode = &TVPal574IntDfScale;
+			vmode = &TVPal576IntDfScale;
 			break;
 		case 4:		// PAL (60Hz)
-			vmode = &TVEurgb60Hz480IntDf;
+			vmode = &TVEurgb60Hz480Int;
+			break;
+		case 5:		// NTSC (240p)
+			vmode = &TVNtsc240Ds;
+			break;
+		case 6:		// PAL (240p)
+			vmode = &TVEurgb60Hz240Ds;
 			break;
 		default:
-			vmode = VIDEO_GetPreferredMode(NULL);
+			//vmode = VIDEO_GetPreferredMode(NULL); //adds deflicker
+			vmode = &TVNtsc480Int;
 	}
 	
 	bool is_pal, wide_mode;
@@ -130,6 +137,9 @@ void mpviSetup(int video_mode, bool overscan)
 	
 	int videoWidth = is_pal ? VI_MAX_WIDTH_PAL : VI_MAX_WIDTH_NTSC;
 	int videoHeight = is_pal ? VI_MAX_HEIGHT_PAL : VI_MAX_HEIGHT_NTSC;
+	
+	if(video_mode > 4) // 240p
+		videoHeight = 240;
 	
 	float scanX = wide_mode ? 0.95 : 0.93;
 	float scanY = !is_pal ? 0.95 : 0.94;
@@ -223,7 +233,7 @@ static void drawdone_cb(void)
 
 static void vblank_cb(u32 retraceCnt)
 {
-	if (vo_vsync && flip_pending) {
+	if (vo_vsync && flip_pending && !VIDEO_GetNextField()) {
 		VIDEO_SetNextFramebuffer(xfb[whichfb]);
 		VIDEO_Flush();
 		whichfb ^= 1;

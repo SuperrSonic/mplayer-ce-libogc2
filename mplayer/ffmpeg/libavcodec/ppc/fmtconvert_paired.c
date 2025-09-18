@@ -42,7 +42,8 @@ static void float_to_int16_paired(int16_t *dst, const float *src, long len)
 	dst -= 2;
 	
 	for (int i = 0; i < (len>>1); i++) {
-		vec_f32_t pair = psq_lu(8,src,0,0);
+		//vec_f32_t pair = psq_lu(8,src,0,0);
+		vector float pair = psq_lu(8,src,0,0);
 		psq_stu(pair,4,dst,0,7);
 	}
 }

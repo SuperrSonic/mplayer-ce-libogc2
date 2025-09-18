@@ -29,7 +29,7 @@
 static void ff_deinterlace_line_paired(uint8_t *dst, const uint8_t *lum_m4, const uint8_t *lum_m3, const uint8_t *lum_m2, const uint8_t *lum_m1, const uint8_t *lum, int size)
 {
 	const float scalar = 0.125;
-	const vec_f32_t power = {2.0,4.0};
+	const vector float power = {2.0,4.0};
 	const float half = 0.5;
 	
 	vector float pair, result;
@@ -58,7 +58,7 @@ static void ff_deinterlace_line_paired(uint8_t *dst, const uint8_t *lum_m4, cons
 static void ff_deinterlace_line_inplace_paired(uint8_t *lum_m4, uint8_t *lum_m3, uint8_t *lum_m2, uint8_t *lum_m1, uint8_t *lum, int size)
 {
 	const float scalar = 0.125;
-	const vec_f32_t power = {2.0,4.0};
+	const vector float power = {2.0,4.0};
 	const float half = 0.5;
 	
 	vector float pair, result;

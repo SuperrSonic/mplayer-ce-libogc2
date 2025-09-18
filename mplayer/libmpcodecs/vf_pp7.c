@@ -288,7 +288,7 @@ static void filter(struct vf_priv_s *p, uint8_t *dst, uint8_t *src, int dst_stri
     int x, y;
     const int stride= is_luma ? p->temp_stride : ((width+16+15)&(~15));
     uint8_t  *p_src= p->src + 8*stride;
-    DCTELEM *block= p->src;
+  /*  DCTELEM *block= p->src;
     DCTELEM *temp= p->src + 32;
 
     if (!src || !dst) return; // HACK avoid crash for Y8 colourspace
@@ -343,7 +343,7 @@ static void filter(struct vf_priv_s *p, uint8_t *dst, uint8_t *src, int dst_stri
                 dst[x + y*dst_stride]= v;
             }
         }
-    }
+    }*/
 }
 
 static int config(struct vf_instance *vf,

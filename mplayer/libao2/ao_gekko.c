@@ -134,10 +134,11 @@ static int control(int cmd, void *arg)
 
 static int init(int rate, int channels, int format, int flags)
 {
-	bool quality = rate > 32000;
+//	bool quality = rate > 32000;
 	
 	AUDIO_Init(NULL);
-	AUDIO_SetDSPSampleRate(quality ? AI_SAMPLERATE_48KHZ : AI_SAMPLERATE_32KHZ);
+	//AUDIO_SetDSPSampleRate(quality ? AI_SAMPLERATE_48KHZ : AI_SAMPLERATE_32KHZ);
+	AUDIO_SetDSPSampleRate(AI_SAMPLERATE_48KHZ);
 	AUDIO_RegisterDMACallback(switch_buffers);
 	
 	ao_data.channels = clamp(channels, 2, 6);
@@ -145,7 +146,8 @@ static int init(int rate, int channels, int format, int flags)
 	request_mult = (float)ao_data.channels / HW_CHANNELS;
 	request_size = BUFFER_SIZE * request_mult;
 	
-	ao_data.samplerate = quality ? 48000 : 32000;
+	ao_data.samplerate = 48000;
+	//ao_data.samplerate = quality ? 48000 : 32000;
 	ao_data.format = AF_FORMAT_S16_NE;
 	ao_data.bps = ao_data.channels * ao_data.samplerate * sizeof(s16);
 	ao_data.buffersize = request_size * BUFFER_COUNT;

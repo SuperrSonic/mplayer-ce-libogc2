@@ -10,7 +10,7 @@ ENTRY(_start);
 PHDRS
 {
   stub PT_LOAD FLAGS(5);
-  text PT_LOAD FLAGS(5);
+  text PT_LOAjD FLAGS(5);
   data PT_LOAD FLAGS(6);
   bss1 PT_LOAD;
   bss2 PT_LOAD;

@@ -56,6 +56,11 @@ static void float_to_int16_interleave_c(int16_t *dst, const float **src,
     }
 }
 
+void ff_fmt_convert_init_ppc(FmtConvertContext *c, AVCodecContext *avctx)
+{
+    return;
+}
+
 av_cold void ff_fmt_convert_init(FmtConvertContext *c, AVCodecContext *avctx)
 {
     c->int32_to_float_fmul_scalar = int32_to_float_fmul_scalar_c;

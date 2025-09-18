@@ -33,9 +33,10 @@
 	asm("psq_l %0,%1,0,1" : "=f"(fCD) : "o"(iCD));	\
 }													\
 
+#if 0
 static void put_h264_chroma_mc4_paired(uint8_t *dst, uint8_t *src, int stride, int h, int x, int y)
 {
-	const vec_f32_t zero = {0.0,0.0};
+	const vector float zero = {0.0,0.0};
 	const float half = 0.5;
 	
 	vector float fAB, fCD;
@@ -111,7 +112,7 @@ static void put_h264_chroma_mc4_paired(uint8_t *dst, uint8_t *src, int stride, i
 
 static void put_h264_chroma_mc8_paired(uint8_t *dst, uint8_t *src, int stride, int h, int x, int y)
 {
-	const vec_f32_t zero = {0.0,0.0};
+	const vector float zero = {0.0,0.0};
 	const float half = 0.5;
 	
 	vector float fAB, fCD;
@@ -231,7 +232,7 @@ static void put_h264_chroma_mc8_paired(uint8_t *dst, uint8_t *src, int stride, i
 
 static void avg_h264_chroma_mc4_paired(uint8_t *dst, uint8_t *src, int stride, int h, int x, int y)
 {
-	const vec_f32_t zero = {0.0,0.0};
+	const vector float zero = {0.0,0.0};
 	const float half = 0.5;
 	
 	vector float fAB, fCD;
@@ -318,7 +319,7 @@ static void avg_h264_chroma_mc4_paired(uint8_t *dst, uint8_t *src, int stride, i
 
 static void avg_h264_chroma_mc8_paired(uint8_t *dst, uint8_t *src, int stride, int h, int x, int y)
 {
-	const vec_f32_t zero = {0.0,0.0};
+	const vector float zero = {0.0,0.0};
 	const float half = 0.5;
 	
 	vector float fAB, fCD;
@@ -456,10 +457,11 @@ static void avg_h264_chroma_mc8_paired(uint8_t *dst, uint8_t *src, int stride, i
 		}
 	}
 }
-
+#endif
+#if 0
 void ff_put_vc1_chroma_mc8_paired_nornd(uint8_t *dst, uint8_t *src, int stride, int h, int x, int y)
 {
-	const vec_f32_t zero = {0.0,0.0};
+	const vector float zero = {0.0,0.0};
 	const float offset = 0.4375;
 	
 	vector float fAB, fCD;
@@ -579,7 +581,7 @@ void ff_put_vc1_chroma_mc8_paired_nornd(uint8_t *dst, uint8_t *src, int stride, 
 
 void ff_avg_vc1_chroma_mc8_paired_nornd(uint8_t *dst, uint8_t *src, int stride, int h, int x, int y)
 {
-	const vec_f32_t zero = {0.0,0.0};
+	const vector float zero = {0.0,0.0};
 	const float offset = 0.4375;
 	const float half = 0.5;
 	
@@ -718,6 +720,7 @@ void ff_avg_vc1_chroma_mc8_paired_nornd(uint8_t *dst, uint8_t *src, int stride, 
 		}
 	}
 }
+#endif
 
 static void ff_h264_idct_add_paired(uint8_t *dst, DCTELEM *block, int stride)
 {
@@ -1202,11 +1205,17 @@ H264_WEIGHT(2,2)
 
 void dsputil_h264_init_ppc(DSPContext *c, AVCodecContext *avctx)
 {
-	c->put_h264_chroma_pixels_tab[0] = put_h264_chroma_mc8_paired;
-	c->put_h264_chroma_pixels_tab[1] = put_h264_chroma_mc4_paired;
-	c->avg_h264_chroma_pixels_tab[0] = avg_h264_chroma_mc8_paired;
-	c->avg_h264_chroma_pixels_tab[1] = avg_h264_chroma_mc4_paired;
+//	c->put_h264_chroma_pixels_tab[0] = put_h264_chroma_mc8_paired;
+//	c->put_h264_chroma_pixels_tab[1] = put_h264_chroma_mc4_paired;
+//	c->avg_h264_chroma_pixels_tab[0] = avg_h264_chroma_mc8_paired;
+//	c->avg_h264_chroma_pixels_tab[1] = avg_h264_chroma_mc4_paired;
 }
+
+// these funcs are not compiling because of ps_cmpu0/1 errors
+// put_h264_chroma_mc4_paired
+// put_h264_chroma_mc8_paired
+// avg_h264_chroma_mc4_paired
+// avg_h264_chroma_mc8_paired
 
 void ff_h264dsp_init_ppc(H264DSPContext *c)
 {

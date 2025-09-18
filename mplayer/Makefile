@@ -810,10 +810,15 @@ FFMPEGFILES = $(foreach part, $(FFMPEGPARTS), $(wildcard ffmpeg/$(part)/*.[chS] 
 all: $(ALL_PRG-yes)
 
 mplayer.dol: mplayer$(EXESUF)
-	elf2dol mplayer$(EXESUF) mplayer.dol
+	D:\Documents\Projects\mplayer-ce-master\mplayer\elf2dol.exe mplayer$(EXESUF) mplayer.dol
 
 %.o: %.S
 	$(CC) $(CC_DEPFLAGS) $(CFLAGS) -c -o $@ $<
+
+ifdef HAVE_PAIRED
+%_paired.o: %_paired.c
+	$(CPS) $(CC_DEPFLAGS) $(CFLAGS) -c -o $@ $<
+endif
 
 %.o: %.c
 	$(CC) $(CC_DEPFLAGS) $(CFLAGS) -c -o $@ $<

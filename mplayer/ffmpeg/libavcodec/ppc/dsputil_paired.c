@@ -158,7 +158,8 @@ static void vorbis_inverse_coupling_paired(float *mag, float *ang, int blocksize
 
 static void ac3_downmix_paired(float (*samples)[256], float (*matrix)[2], int out_ch, int in_ch, int len)
 {
-	const vec_f32_t zero = {0.0,0.0};
+	//const vec_f32_t zero = {0.0,0.0};
+	const vector float zero = {0.0,0.0};
 	
 	vector float result[2];
 	vector float pair, coeffs;

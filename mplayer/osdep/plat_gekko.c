@@ -39,6 +39,9 @@
 #include "gx_supp.h"
 #include "plat_gekko.h"
 
+char MPLAYER_DATADIR[100];
+char MPLAYER_CONFDIR[100]; 
+char MPLAYER_LIBDIR[100]; 
 
 #ifdef HW_RVL
 #include "mload.h"
@@ -129,6 +132,8 @@ static const DISC_INTERFACE *usb = &__io_usbstorage;
 static const DISC_INTERFACE *dvd = &__io_wiidvd;
 #else
 static const DISC_INTERFACE *dvd = &__io_gcdvd;
+static const DISC_INTERFACE *gcsd = &__io_gcode;
+static const DISC_INTERFACE *sp2 = &__io_gcsd2;
 #endif
 static const DISC_INTERFACE *carda = &__io_gcsda;
 static const DISC_INTERFACE *cardb = &__io_gcsdb;
@@ -167,6 +172,9 @@ enum {
 #ifdef HW_RVL
 	DEVICE_SD,
 	DEVICE_USB,
+#else
+	DEVICE_GC,
+	DEVICE_SP2,
 #endif
 	DEVICE_MAX,
 };
@@ -229,28 +237,52 @@ static void mountproc()
 		isInserted[DEVICE_USB] = true;
 	}
 #endif
+
+#if 1
+	if (isInserted[DEVICE_GC]) {
+		if (!__io_gcode.isInserted(gcsd)) {
+			fatUnmount("gcsd:");
+			__io_gcode.shutdown(gcsd);
+			isInserted[DEVICE_GC] = false;
+		}
+	} else if (__io_gcode.startup(gcsd) && __io_gcode.isInserted(gcsd)) {
+		fatMount("gcsd", &__io_gcode, 0, 4, 64);
+		isInserted[DEVICE_GC] = true;
+	}
+	
+	if (isInserted[DEVICE_SP2]) {
+		if (!__io_gcsd2.isInserted(sp2)) {
+			fatUnmount("sp2:");
+			__io_gcsd2.shutdown(sp2);
+			isInserted[DEVICE_SP2] = false;
+		}
+	} else if (__io_gcsd2.startup(sp2) && __io_gcsd2.isInserted(sp2)) {
+		fatMount("sp2", &__io_gcsd2, 0, 4, 64);
+		isInserted[DEVICE_SP2] = true;
+	}
 	
 	if (isInserted[DEVICE_CARDA]) {
-		if (!carda->isInserted()) {
+		if (!__io_gcsda.isInserted(carda)) {
 			fatUnmount("carda:");
-			carda->shutdown();
+			__io_gcsda.shutdown(carda);
 			isInserted[DEVICE_CARDA] = false;
 		}
-	} else if (carda->startup() && carda->isInserted()) {
-		fatMount("carda", carda, 0, 4, 64);
+	} else if (__io_gcsda.startup(carda) && __io_gcsda.isInserted(carda)) {
+		fatMount("carda", &__io_gcsda, 0, 4, 64);
 		isInserted[DEVICE_CARDA] = true;
 	}
 	
 	if (isInserted[DEVICE_CARDB]) {
-		if (!cardb->isInserted()) {
+		if (!__io_gcsdb.isInserted(cardb)) {
 			fatUnmount("cardb:");
-			cardb->shutdown();
+			__io_gcsdb.shutdown(cardb);
 			isInserted[DEVICE_CARDB] = false;
 		}
-	} else if (cardb->startup() && cardb->isInserted()) {
-		fatMount("cardb", cardb, 0, 4, 64);
+	} else if (__io_gcsdb.startup(cardb) && __io_gcsdb.isInserted(cardb)) {
+		fatMount("cardb", &__io_gcsdb, 0, 4, 64);
 		isInserted[DEVICE_CARDB] = true;
 	}
+#endif
 }
 
 #ifdef HW_RVL
@@ -387,9 +419,8 @@ static s32 initialise_network()
 
 static int wait_for_network_initialisation() 
 {
-	int i;
-	if(network_initied) return 1;
-	
+	return 0;
+	/*
 	for(i=0;i<5;i++)
 	{
 		if (initialise_network() >= 0) {
@@ -409,7 +440,7 @@ static int wait_for_network_initialisation()
 		sleep(5);
 	}
 	
-	return 0;
+	return 0;*/
 }
 
 static void read_net_config()
@@ -569,7 +600,7 @@ static void LoadParams()
 	
 	static const m_option_t opts[] = {
 		{"restore_points", &enable_restore_points, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-		{"video_mode", &video_mode, CONF_TYPE_INT, CONF_RANGE, 0, 4, NULL},
+		{"video_mode", &video_mode, CONF_TYPE_INT, CONF_RANGE, 0, 6, NULL},
 		{"overscan", &overscan, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 		{NULL, NULL, 0, 0, 0, 0, NULL}
 	};
@@ -620,6 +651,16 @@ static bool DetectValidPath()
 		if (CheckPath("usb:/mplayer")) return true;
 	}
 #endif
+	
+	if (isInserted[DEVICE_GC] && !(FindDevice("gcsd:") < 0)) {
+		if (CheckPath("gcsd:/apps/mplayer-ce")) return true;
+		if (CheckPath("gcsd:/mplayer")) return true;
+	}
+	
+	if (isInserted[DEVICE_SP2] && !(FindDevice("sp2:") < 0)) {
+		if (CheckPath("sp2:/apps/mplayer-ce")) return true;
+		if (CheckPath("sp2:/mplayer")) return true;
+	}
 	
 	if (isInserted[DEVICE_CARDA] && !(FindDevice("carda:") < 0)) {
 		if (CheckPath("carda:/apps/mplayer-ce")) return true;

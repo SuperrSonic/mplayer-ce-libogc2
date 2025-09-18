@@ -311,6 +311,10 @@ const m_option_t mplayer_opts[]={
     //geexbox bgvideo patch
     {"bgvideo", &bg_video, CONF_TYPE_STRING, 0, 0, 0, NULL},
     {"dir_play", &dir_play, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
+    {"dir_shuffle", &dir_shuffle, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
+    {"dir_loop", &dir_loop, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
+	
+    {"menu_open", &open_menu, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
 
     {"noloop", &mpctx_s.loop_times, CONF_TYPE_FLAG, 0, 0, -1, NULL},
     {"loop", &mpctx_s.loop_times, CONF_TYPE_INT, CONF_RANGE, -1, 10000, NULL},

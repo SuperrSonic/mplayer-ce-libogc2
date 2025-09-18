@@ -29,6 +29,8 @@ distribution.
 #include <stdlib.h>
 #include <string.h>
 
+#include <unistd.h>
+
 #include "log_console.h"
 
 static bool gecko = false;
@@ -49,7 +51,7 @@ static int __out_write(struct _reent *r, int fd, const char *ptr, int len) {
 		return -1;
 	LWP_MutexLock(console_mutex);
 	if (video_active) {
-		dot_video->write_r(r, fd, ptr, len);
+		dot_video->write_r(r, &fd, ptr, len);
 	} else {
 		if (log_active) {
 			l = (log_next + 1) % log_size;
@@ -75,7 +77,7 @@ const devoptab_t dot_out = {
 	0,			// size of file structure
 	NULL,		// device open
 	NULL,		// device close
-	__out_write,// device write
+	NULL,// device write
 	NULL,		// device read
 	NULL,		// device seek
 	NULL,		// device fstat

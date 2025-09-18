@@ -141,6 +141,14 @@
 #include "stream/stream_dvd.h"
 #endif
 
+extern void ReInitTTFLib();
+extern void refillcache(stream_t *stream,float min);
+extern int stream_error(stream_t *stream);
+extern void clear_pause_mpi();
+extern bool check_play_next_file(char *fileplaying,char *next_filename);
+
+// SuSo: when a playlist loads the next file the menu is shown
+int open_menu=1;
 
 int slave_mode=0;
 int player_idle_mode=0;
@@ -157,6 +165,8 @@ char *heartbeat_cmd;
 #endif
 
 m_config_t* mconfig;
+
+bool halve_fps = true;
 
 //**************************************************************************//
 //             Config file
@@ -772,6 +782,13 @@ void uninit_player(unsigned int mask){
 
   mp_msg(MSGT_CPLAYER,MSGL_DBG2,"\n*** uninit(0x%X)\n",mask);
 
+  // SUSO: This prevents DVD subs from leaking!
+  if (vo_spudec){
+     current_module="uninit_spudec";
+     spudec_free(vo_spudec);
+     vo_spudec=NULL;
+  }
+
   if(mask&INITIALIZED_ACODEC){
     initialized_flags&=~INITIALIZED_ACODEC;
     current_module="uninit_acodec";
@@ -828,11 +845,14 @@ void uninit_player(unsigned int mask){
 #ifdef CONFIG_DVDNAV
     mp_dvdnav_context_free(mpctx);
 #endif
+
+#if 0 // This code is never called
     if (vo_spudec){
       current_module="uninit_spudec";
       spudec_free(vo_spudec);
       vo_spudec=NULL;
     }
+#endif
   }
 
   // Must be after libvo uninit, as few vo drivers (svgalib) have tty code.
@@ -1857,9 +1877,9 @@ void update_osd_msg(void) {
                             fractions_text,len/3600,(len/60)%60,len%60,
                             percentage_text);
             } else
-                snprintf(osd_text_timer, 63, "%c %02d:%02d:%02d%s%s",
+                snprintf(osd_text_timer, 63, "%c %02d:%02d:%02d%s%s Drops: %d",
                          mpctx->osd_function,pts/3600,(pts/60)%60,
-                         pts%60,fractions_text,percentage_text);
+                         pts%60,fractions_text,percentage_text, drop_frame_cnt);
         } else
             osd_text_timer[0]=0;
 
@@ -2302,6 +2322,16 @@ static void adjust_sync_and_print_status(int between_frames, float timing_error)
      } else {
     //
 	double a_pts, v_pts;
+	
+	// This is based on Extrems' PsF vmode support, it makes vsync work in 30 fps videos
+	if (mpctx->sh_video->fps > 28 && mpctx->sh_video->fps < 31 && halve_fps) {
+		//after checking if it's 30fps switch fps
+		static vu16* const _vigReg = (vu16*)0xCC002030;
+		if(*_vigReg == 0x120E || *_vigReg == 0x1107) {
+			*_vigReg = 0x1001; //0x1001(30fps), 0x120E(480p60fps) 0x1107(480i60fps)
+			halve_fps = false;
+		}
+	}
 
 	if (autosync)
 	    /*
@@ -2325,10 +2355,12 @@ static void adjust_sync_and_print_status(int between_frames, float timing_error)
 	    static int drop_message=0;
 	    double AV_delay = a_pts - audio_delay - v_pts;
 	    double x;
+	#if 0
 	    if (AV_delay>0.5 && drop_frame_cnt>50 && drop_message==0){
 		++drop_message;
 		mp_msg(MSGT_AVSYNC,MSGL_WARN,MSGTR_SystemTooSlow);
 	    }
+	#endif
 	    if (autosync)
 		x = AV_delay*0.1f;
 	    else
@@ -4689,6 +4721,13 @@ if(benchmark){
                (total_time_usage>0.5)?(total_frame_cnt/total_time_usage):0);
 }
 
+static vu32* const _vigReg = (vu32*)0xCC002030;
+if(*_vigReg == 0x100101AE)
+	*_vigReg = 0x110701AE; //0x1001(30fps) go back to 480i60
+else if(*_vigReg == 0x10010001)
+	*_vigReg = 0x120E0001; //0x1001(30fps) go back to 480p60
+halve_fps=true;
+
 // time to uninit all, except global stuff:
 //rodries: INITIALIZED_DEMUXER+INITIALIZED_VCODEC  review (added for testing)
 uninit_player(INITIALIZED_ALL-(INITIALIZED_DEMUXER+INITIALIZED_INPUT+INITIALIZED_VCODEC+INITIALIZED_GETCH2+INITIALIZED_GUI+(fixed_vo?INITIALIZED_VO:0)));
@@ -4740,7 +4779,7 @@ if( mpctx->eof == PT_NEXT_ENTRY)
 		rel_seek_secs=seek_to_sec=0;
 		goto play_next_file;
 	}
-	else mp_input_queue_cmd(mp_input_parse_cmd("menu show"));
+	else if(open_menu)mp_input_queue_cmd(mp_input_parse_cmd("menu show"));
 } 	
 
 

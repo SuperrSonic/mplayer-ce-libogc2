@@ -56,6 +56,8 @@ struct vf_priv_s {
 
 static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts);
 
+void clear_mpi(mp_image_t *mpi);
+
 void clear_pause_mpi()
 {
 	clear_mpi(pause_mpi);

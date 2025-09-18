@@ -316,7 +316,7 @@ static int h264_split(AVCodecContext *avctx,
     return 0;
 }
 
-static void close(AVCodecParserContext *s)
+static void close_h264(AVCodecParserContext *s)
 {
     H264Context *h = s->priv_data;
     ParseContext *pc = &h->s.parse_context;
@@ -337,6 +337,6 @@ AVCodecParser ff_h264_parser = {
     sizeof(H264Context),
     init,
     h264_parse,
-    close,
+    close_h264,
     h264_split,
 };

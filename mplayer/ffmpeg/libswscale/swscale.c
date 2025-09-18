@@ -1904,7 +1904,7 @@ int sws_scale(SwsContext *c, const uint8_t* const src[], const int srcStride[], 
     if (srcSliceH == 0)
         return 0;
 
-    if (!check_image_pointers(src, c->srcFormat, srcStride)) {
+    if (!check_image_pointers((uint8_t **)src, c->srcFormat, srcStride)) {
         av_log(c, AV_LOG_ERROR, "bad src image pointers\n");
         return 0;
     }

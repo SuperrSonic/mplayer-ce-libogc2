@@ -39,6 +39,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <malloc.h>
+
 #include "libavutil/avutil.h"
 #include "input/input.h"
 #include "osdep/shmem.h"
@@ -73,6 +75,9 @@ static void *ThreadProc(void *s);
 
 #include "stream.h"
 #include "cache2.h"
+
+extern bool IsLoopAvi(char *_file);
+extern void force_osd();
 
 #if defined(GEKKO)
 #define GEKKO_THREAD_STACKSIZE (512 * 1024)
@@ -414,7 +419,8 @@ static cache_vars_t* cache_init(int size,int sector){
   s->buffer_size=num*sector;
   s->sector_size=sector;
 #if defined(GEKKO) && defined(HW_DOL)
-  s->buffer=AR_GetBaseAddress()+(AR_GetInternalSize()-s->buffer_size-0x4000);
+  s->buffer=(void*)(AR_GetBaseAddress()+(AR_GetInternalSize()-s->buffer_size-0x4000));
+  //s->buffer=shared_alloc(s->buffer_size);
 
   if((u32)s->buffer < AR_GetBaseAddress()){
 #else
@@ -577,9 +583,9 @@ int stream_enable_cache(stream_t *stream,int size,int min,int seek_limit){
 #elif defined(GEKKO)
 	s->thread_active = 1;
 #ifdef HW_DOL
-	s->arq_read_buffer = memalign(32, ss > STREAM_MAX_SECTOR_SIZE ? STREAM_MAX_SECTOR_SIZE : ss);
-	s->arq_fill_buffer = memalign(32, stream->read_chunk ? stream->read_chunk : 4 * ss);
-	gekko_stack = memalign(32, GEKKO_THREAD_STACKSIZE);
+	s->arq_read_buffer = (void*)memalign(32, ss > STREAM_MAX_SECTOR_SIZE ? STREAM_MAX_SECTOR_SIZE : ss);
+	s->arq_fill_buffer = (void*)memalign(32, stream->read_chunk ? stream->read_chunk : 4 * ss);
+	gekko_stack = (void*)memalign(32, GEKKO_THREAD_STACKSIZE);
 #endif
 	memset(gekko_stack, 0x00, GEKKO_THREAD_STACKSIZE);
 	LWP_CreateThread(&stream->cache_pid, ThreadProc, s, gekko_stack,
@@ -793,7 +799,8 @@ void refillcache(stream_t *stream,float min)
 		  {
 			  if(cmd->id==MP_CMD_PAUSE)
 			  {
-				  cmd = mp_input_get_cmd(time,0,0);
+				 // cmd = mp_input_get_cmd(time,0,0);
+				  cmd = mp_input_get_cmd(PREFILL_SLEEP_TIME,0,0);
 				  mp_cmd_free(cmd);
 			  }
 		  }

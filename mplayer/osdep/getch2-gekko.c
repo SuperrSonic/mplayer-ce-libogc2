@@ -38,6 +38,7 @@
 
 #include <ogc/usbmouse.h>
 
+extern void mpgxUpdateSquare();
 
 #define PAD_DEADZONE 18
 #define PAD_MODIFIER 16

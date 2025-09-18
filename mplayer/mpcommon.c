@@ -45,6 +45,8 @@
 
 double sub_last_pts = -303;
 
+extern void load_builtin_codecs();
+
 #ifdef CONFIG_ASS
 #include "sub/ass_mp.h"
 ASS_Track* ass_track = 0; // current track to render

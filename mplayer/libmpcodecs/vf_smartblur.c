@@ -183,7 +183,7 @@ static inline void blur(uint8_t *dst, uint8_t *src, int w, int h, int dstStride,
 static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts){
     int cw= mpi->w >> mpi->chroma_x_shift;
     int ch= mpi->h >> mpi->chroma_y_shift;
-    FilterParam *f= &vf->priv;
+    FilterParam *f= NULL;
 
     mp_image_t *dmpi=vf_get_image(vf->next,mpi->imgfmt,
         MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_STRIDE|

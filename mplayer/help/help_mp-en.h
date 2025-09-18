@@ -201,14 +201,14 @@ static const char help_text[]=
 #define MSGTR_EdloutEndSkip "EDL skip end, line written.\n"
 
 // mplayer.c OSD
-#define MSGTR_OSDenabled "enabled"
-#define MSGTR_OSDdisabled "disabled"
+#define MSGTR_OSDenabled "ON"
+#define MSGTR_OSDdisabled "OFF"
 #define MSGTR_OSDAudio "Audio: %s"
 #define MSGTR_OSDVideo "Video: %s"
 #define MSGTR_OSDChannel "Channel: %s"
 #define MSGTR_OSDSubDelay "Sub delay: %d ms"
 #define MSGTR_OSDSpeed "Speed: x %6.2f"
-#define MSGTR_OSDosd "OSD: %s"
+#define MSGTR_OSDosd "  OSD: %s"
 #define MSGTR_OSDChapter "Chapter: (%d) %s"
 #define MSGTR_OSDAngle "Angle: %d/%d"
 #define MSGTR_OSDDeinterlace "Deinterlace: %s"
