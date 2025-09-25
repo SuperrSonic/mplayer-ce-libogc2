@@ -1,5 +1,4 @@
 for %%A IN (*.mp4) do (
-"ffmpeg.exe"  -i "%%~A" -vf crop=1440:ih:240:0,scale='512:480:flags=lanczos',setdar='4/3' -vcodec libx264 -profile:v baseline -level:v 3.0 -vb 2000k -refs 1 -me_method umh -subq 6 -me_range 16 -g 60 -keyint_min 31 -sc_threshold 0 -mixed-refs 1 -rc-lookahead 60 -qcomp 0.50 -qmin 8 -qmax 51 -pix_fmt yuv420p -x264opts "fast-pskip=0:trellis=0:8x8dct=0:no-deblock:stitchable:vbv-maxrate=3000:vbv-bufsize=4000:interlaced=0" -an -f null -
 "ffmpeg.exe"  -i "%%~A" -vf crop=1440:ih:240:0,scale='512:480:flags=lanczos',setdar='4/3' -vcodec libx264 -profile:v baseline -level:v 3.0 -vb 2000k -refs 1 -me_method umh -subq 6 -me_range 16 -g 60 -keyint_min 31 -sc_threshold 0 -mixed-refs 1 -rc-lookahead 60 -qcomp 0.50 -qmin 8 -qmax 51 -pix_fmt yuv420p -x264opts "fast-pskip=0:trellis=0:8x8dct=0:no-deblock:stitchable:vbv-maxrate=3000:vbv-bufsize=4000:interlaced=0" -acodec libvorbis -ab 64k -ac 2 "GCN_OUTPUT/%%~A_gcn.mkv"
 echo  Converting video for GameCube...
 )
